@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Ultra Space Shooter PRO</title>
+<title>Galaxy Battle Ultra</title>
 
 <style>
 
@@ -12,137 +12,124 @@ background:black;
 color:white;
 text-align:center;
 font-family:Arial;
-overflow:hidden;
 }
 
 canvas{
 background:black;
-display:block;
-margin:auto;
 border:2px solid white;
 }
 
-#ui{
-margin:10px;
+button{
+font-size:20px;
+padding:10px 15px;
+margin:4px;
 }
 
-button{
-padding:10px 20px;
-font-size:18px;
+#controls{
+margin-top:10px;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<h2>🚀 Ultra Space Shooter PRO</h2>
+<h2>🚀 Galaxy Battle Ultra</h2>
 
-<div id="ui">
+<div>
 Score: <span id="score">0</span>
 HP: <span id="hp">5</span>
-Highscore: <span id="high">0</span>
+</div>
+
+<div>
+Chọn tàu:
+<button onclick="selectShip(1)">⚡</button>
+<button onclick="selectShip(2)">🔥</button>
+<button onclick="selectShip(3)">👾</button>
 </div>
 
 <canvas id="game" width="400" height="600"></canvas>
 
+<div id="controls">
+
+<div>
+<button onclick="move('up')">⬆</button>
+</div>
+
+<div>
+<button onclick="move('left')">⬅</button>
+<button onclick="shoot()">🔫</button>
+<button onclick="move('right')">➡</button>
+</div>
+
+<div>
+<button onclick="move('down')">⬇</button>
+</div>
+
+</div>
+
 <script>
 
-let canvas = document.getElementById("game")
-let ctx = canvas.getContext("2d")
+let canvas=document.getElementById("game")
+let ctx=canvas.getContext("2d")
 
 let score=0
 let hp=5
-
-let high=localStorage.getItem("space_pro_high")||0
-document.getElementById("high").innerText=high
-
-let keys={}
-
-document.addEventListener("keydown",e=>keys[e.key]=true)
-document.addEventListener("keyup",e=>keys[e.key]=false)
+let shipType=1
 
 let player={
 x:180,
-y:540,
-w:40,
-h:30,
-speed:6,
-gun:1
+y:520,
+speed:20
 }
 
 let bullets=[]
 let enemies=[]
-let items=[]
-let stars=[]
 let explosions=[]
 let boss=null
 
-for(let i=0;i<100;i++){
+function selectShip(t){
+shipType=t
+}
 
-stars.push({
-x:Math.random()*400,
-y:Math.random()*600,
-s:Math.random()*2
+function move(dir){
+
+if(dir=="left")player.x-=player.speed
+if(dir=="right")player.x+=player.speed
+if(dir=="up")player.y-=player.speed
+if(dir=="down")player.y+=player.speed
+
+}
+
+function shoot(){
+
+bullets.push({
+x:player.x+18,
+y:player.y
 })
 
 }
 
 function spawnEnemy(){
 
-if(score%20==0 && score>0 && boss==null){
+enemies.push({
+x:Math.random()*360,
+y:-20,
+speed:2+Math.random()*2
+})
+
+}
+
+setInterval(spawnEnemy,1200)
+
+function spawnBoss(){
 
 boss={
 x:150,
 y:-80,
 w:100,
 h:60,
-hp:30
-}
-
-return
-}
-
-enemies.push({
-x:Math.random()*360,
-y:-30,
-w:30,
-h:30,
-speed:2+Math.random()*2
-})
-
-}
-
-setInterval(spawnEnemy,900)
-
-function shoot(){
-
-for(let i=0;i<player.gun;i++){
-
-bullets.push({
-x:player.x+18+(i*10)-(player.gun*5),
-y:player.y
-})
-
-}
-
-}
-
-setInterval(shoot,250)
-
-function drawStars(){
-
-ctx.fillStyle="white"
-
-for(let s of stars){
-
-s.y+=1
-
-if(s.y>600)s.y=0
-
-ctx.fillRect(s.x,s.y,s.s,s.s)
-
+hp:20
 }
 
 }
@@ -152,18 +139,18 @@ function explosion(x,y){
 explosions.push({
 x:x,
 y:y,
-time:20
+t:20
 })
 
 }
 
-function spawnItem(x,y){
+function drawPlayer(){
 
-items.push({
-x:x,
-y:y,
-type:"gun"
-})
+if(shipType==1)ctx.fillStyle="cyan"
+if(shipType==2)ctx.fillStyle="orange"
+if(shipType==3)ctx.fillStyle="lime"
+
+ctx.fillRect(player.x,player.y,40,30)
 
 }
 
@@ -171,13 +158,7 @@ function update(){
 
 ctx.clearRect(0,0,400,600)
 
-drawStars()
-
-if(keys["ArrowLeft"])player.x-=player.speed
-if(keys["ArrowRight"])player.x+=player.speed
-
-ctx.fillStyle="cyan"
-ctx.fillRect(player.x,player.y,player.w,player.h)
+drawPlayer()
 
 for(let i=0;i<bullets.length;i++){
 
@@ -198,31 +179,18 @@ let e=enemies[i]
 
 e.y+=e.speed
 
-ctx.fillStyle="lime"
-ctx.fillRect(e.x,e.y,e.w,e.h)
+ctx.fillStyle="white"
+ctx.fillRect(e.x,e.y,30,30)
 
 if(e.y>600){
 
 hp--
 document.getElementById("hp").innerText=hp
-
 enemies.splice(i,1)
 
 if(hp<=0)gameOver()
 
 }
-
-}
-
-if(boss){
-
-boss.y+=1
-
-ctx.fillStyle="purple"
-ctx.fillRect(boss.x,boss.y,boss.w,boss.h)
-
-ctx.fillStyle="white"
-ctx.fillText("BOSS HP:"+boss.hp,boss.x,boss.y-5)
 
 }
 
@@ -233,14 +201,12 @@ let b=bullets[i]
 let e=enemies[j]
 
 if(b&&e&&
-b.x<e.x+e.w&&
-b.x+4>e.x&&
-b.y<e.y+e.h&&
+b.x<e.x+30 &&
+b.x+4>e.x &&
+b.y<e.y+30 &&
 b.y+10>e.y){
 
 explosion(e.x,e.y)
-
-if(Math.random()<0.2)spawnItem(e.x,e.y)
 
 bullets.splice(i,1)
 enemies.splice(j,1)
@@ -249,12 +215,24 @@ score++
 
 document.getElementById("score").innerText=score
 
+if(score%15==0 && boss==null){
+spawnBoss()
+}
+
 }
 
 }
 }
 
 if(boss){
+
+boss.y+=1
+
+ctx.fillStyle="purple"
+ctx.fillRect(boss.x,boss.y,boss.w,boss.h)
+
+ctx.fillStyle="white"
+ctx.fillText("BOSS:"+boss.hp,boss.x,boss.y-5)
 
 for(let i=0;i<bullets.length;i++){
 
@@ -274,38 +252,12 @@ boss.hp--
 if(boss.hp<=0){
 
 explosion(boss.x+50,boss.y+30)
-
 boss=null
-
 score+=10
 
 }
 
 }
-
-}
-
-}
-
-for(let i=0;i<items.length;i++){
-
-let it=items[i]
-
-it.y+=2
-
-ctx.fillStyle="yellow"
-ctx.fillRect(it.x,it.y,15,15)
-
-if(
-player.x<it.x+15 &&
-player.x+player.w>it.x &&
-player.y<it.y+15 &&
-player.y+player.h>it.y
-){
-
-player.gun++
-
-items.splice(i,1)
 
 }
 
@@ -318,12 +270,12 @@ let ex=explosions[i]
 ctx.fillStyle="orange"
 
 ctx.beginPath()
-ctx.arc(ex.x,ex.y,20-ex.time,0,Math.PI*2)
+ctx.arc(ex.x,ex.y,20-ex.t,0,Math.PI*2)
 ctx.fill()
 
-ex.time--
+ex.t--
 
-if(ex.time<=0)explosions.splice(i,1)
+if(ex.t<=0)explosions.splice(i,1)
 
 }
 
@@ -333,14 +285,7 @@ requestAnimationFrame(update)
 
 function gameOver(){
 
-if(score>high){
-
-localStorage.setItem("space_pro_high",score)
-
-}
-
 alert("GAME OVER\nScore: "+score)
-
 location.reload()
 
 }
